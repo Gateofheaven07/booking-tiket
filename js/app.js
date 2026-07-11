@@ -1,14 +1,12 @@
-// app.js — Logika utama aplikasi booking kursi bioskop.
-// Mengorkestrasi alur: film → jadwal → kursi → nama/konfirmasi → booking → daftar.
+// app.js — Logika utama CinemaGo.
+// Alur: film → jadwal → kursi → nama/konfirmasi → booking → daftar.
 
-// State pilihan pengguna saat ini.
 const state = {
-  film: null, // objek film
-  schedule: null, // objek schedule
-  seats: [], // array nomor kursi terpilih, mis. ["A1","A2"]
+  film: null,
+  schedule: null,
+  seats: [],
 };
 
-// Referensi elemen.
 const els = {
   steps: {
     film: document.getElementById("step-film"),
@@ -18,42 +16,73 @@ const els = {
     success: document.getElementById("step-success"),
   },
   filmGrid: document.getElementById("filmGrid"),
-  selectedFilmInfo: document.getElementById("selectedFilmInfo"),
+  filmHero: document.getElementById("filmHero"),
   scheduleList: document.getElementById("scheduleList"),
   seatContext: document.getElementById("seatContext"),
   seatMap: document.getElementById("seatMap"),
-  selectedSeatsText: document.getElementById("selectedSeatsText"),
-  toConfirmBtn: document.getElementById("toConfirmBtn"),
+  summaryContent: document.getElementById("summaryContent"),
   nameInput: document.getElementById("nameInput"),
   nameError: document.getElementById("nameError"),
-  summaryContent: document.getElementById("summaryContent"),
-  bookBtn: document.getElementById("bookBtn"),
-  successDetail: document.getElementById("successDetail"),
+  ticketCard: document.getElementById("ticketCard"),
   bookAgainBtn: document.getElementById("bookAgainBtn"),
   bookingsList: document.getElementById("bookingsList"),
+  bookingsPanel: document.getElementById("bookingsPanel"),
   stepsIndicator: document.getElementById("stepsIndicator"),
+  topbarStep: document.getElementById("topbarStep"),
+  actionBar: document.getElementById("actionBar"),
+  actionLabel: document.getElementById("actionLabel"),
+  actionValue: document.getElementById("actionValue"),
+  actionBtn: document.getElementById("actionBtn"),
 };
+
+let currentStep = "film";
 
 // ---------- Navigasi antar-step ----------
 
-// Tampilkan satu step, sembunyikan lainnya. stepName ∈ film|schedule|seat|confirm|success
 function showStep(stepName) {
+  currentStep = stepName;
   Object.entries(els.steps).forEach(([name, el]) => {
     el.classList.toggle("hidden", name !== stepName);
   });
+  // Panel daftar booking hanya tampil di step film (home).
+  els.bookingsPanel.classList.toggle("hidden", stepName !== "film");
   updateIndicator(stepName);
+  updateActionBar();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function updateIndicator(stepName) {
-  // Peta step → nomor indikator (success dianggap tahap terakhir).
   const order = { film: 1, schedule: 2, seat: 3, confirm: 4, success: 4 };
   const current = order[stepName] || 1;
+  const labels = { 1: "Pilih Film", 2: "Pilih Jadwal", 3: "Pilih Kursi", 4: "Konfirmasi" };
+  els.topbarStep.textContent = "Langkah " + current + "/4 · " + labels[current];
   els.stepsIndicator.querySelectorAll("li").forEach((li) => {
     const n = Number(li.dataset.step);
     li.classList.toggle("active", n === current);
     li.classList.toggle("done", n < current);
   });
+}
+
+// Action bar kontekstual (muncul di step kursi & konfirmasi).
+function updateActionBar() {
+  if (currentStep === "seat") {
+    els.actionBar.classList.remove("hidden");
+    els.actionLabel.textContent = "Kursi Dipilih";
+    const sorted = [...state.seats].sort();
+    els.actionValue.textContent = sorted.length ? sorted.join(", ") : "-";
+    els.actionBtn.textContent = "Lanjut ke Konfirmasi";
+    els.actionBtn.disabled = state.seats.length === 0;
+    els.actionBtn.onclick = goToConfirm;
+  } else if (currentStep === "confirm") {
+    els.actionBar.classList.remove("hidden");
+    els.actionLabel.textContent = "Total Kursi";
+    els.actionValue.textContent = state.seats.length + " kursi";
+    els.actionBtn.textContent = "Booking Sekarang";
+    els.actionBtn.disabled = false;
+    els.actionBtn.onclick = handleBooking;
+  } else {
+    els.actionBar.classList.add("hidden");
+  }
 }
 
 // ---------- STEP 1: Daftar film ----------
@@ -64,10 +93,15 @@ function renderFilms() {
     const card = document.createElement("div");
     card.className = "film-card";
     card.innerHTML = `
-      <div class="film-emoji">${film.emoji}</div>
-      <h3>${film.judul}</h3>
-      <p class="film-meta">${film.genre}</p>
-      <p class="film-meta">⏱ ${film.durasi}</p>
+      <div class="poster-wrap">
+        <img src="${film.poster}" alt="Poster ${escapeHtml(film.judul)}" loading="lazy" />
+        <span class="poster-rating">★ ${film.rating}</span>
+      </div>
+      <div class="film-body">
+        <h3>${escapeHtml(film.judul)}</h3>
+        <p class="film-meta">${escapeHtml(film.genre)}</p>
+        <p class="film-meta">⏱ ${film.durasi}</p>
+      </div>
     `;
     card.addEventListener("click", () => selectFilm(film));
     els.filmGrid.appendChild(card);
@@ -86,13 +120,20 @@ function selectFilm(film) {
 
 function renderSchedules() {
   const film = state.film;
-  els.selectedFilmInfo.innerHTML =
-    `${film.emoji} <strong>${film.judul}</strong> — ${film.genre} · ${film.durasi}`;
+  els.filmHero.innerHTML = `
+    <img src="${film.poster}" alt="Poster ${escapeHtml(film.judul)}" />
+    <div class="hero-info">
+      <span class="hero-badge">★ ${film.rating}</span>
+      <h3>${escapeHtml(film.judul)}</h3>
+      <p class="hero-meta">${escapeHtml(film.genre)}</p>
+      <p class="hero-meta">⏱ ${film.durasi}</p>
+    </div>
+  `;
   els.scheduleList.innerHTML = "";
   film.schedules.forEach((sch) => {
     const btn = document.createElement("button");
     btn.className = "schedule-btn";
-    btn.textContent = "🕐 " + sch.jam;
+    btn.innerHTML = `${sch.jam}<small>Studio 1</small>`;
     btn.addEventListener("click", () => selectSchedule(sch));
     els.scheduleList.appendChild(btn);
   });
@@ -109,8 +150,7 @@ function selectSchedule(schedule) {
 
 function renderSeatMap() {
   const { film, schedule } = state;
-  els.seatContext.innerHTML =
-    `${film.emoji} <strong>${film.judul}</strong> · Jadwal <strong>${schedule.jam}</strong>`;
+  els.seatContext.textContent = `${film.judul} · Jadwal ${schedule.jam}`;
 
   const bookedSeats = getBookedSeats(film.id, schedule.id);
   els.seatMap.innerHTML = "";
@@ -143,7 +183,7 @@ function renderSeatMap() {
     els.seatMap.appendChild(rowEl);
   });
 
-  updateSeatSelectionUI();
+  updateActionBar();
 }
 
 function toggleSeat(seatId, seatBtn) {
@@ -155,28 +195,21 @@ function toggleSeat(seatId, seatBtn) {
     state.seats.push(seatId);
     seatBtn.classList.add("selected");
   }
-  updateSeatSelectionUI();
-}
-
-function updateSeatSelectionUI() {
-  if (state.seats.length === 0) {
-    els.selectedSeatsText.textContent = "Belum ada kursi dipilih.";
-    els.toConfirmBtn.disabled = true;
-  } else {
-    const sorted = [...state.seats].sort();
-    els.selectedSeatsText.textContent =
-      `Kursi dipilih: ${sorted.join(", ")} (${sorted.length} kursi)`;
-    els.toConfirmBtn.disabled = false;
-  }
+  updateActionBar();
 }
 
 // ---------- STEP 4: Nama & konfirmasi ----------
+
+function goToConfirm() {
+  renderSummary();
+  showStep("confirm");
+}
 
 function renderSummary() {
   const { film, schedule, seats } = state;
   const sorted = [...seats].sort();
   els.summaryContent.innerHTML = `
-    <dt>Film</dt><dd>${film.judul}</dd>
+    <dt>Film</dt><dd>${escapeHtml(film.judul)}</dd>
     <dt>Jadwal</dt><dd>${schedule.jam}</dd>
     <dt>Nomor Kursi</dt><dd>${sorted.join(", ")}</dd>
     <dt>Jumlah</dt><dd>${sorted.length} kursi</dd>
@@ -198,23 +231,21 @@ function handleBooking() {
 
   const { film, schedule } = state;
 
-  // Validasi ganda: pastikan kursi belum keburu dipesan (mis. dari tab lain).
+  // Validasi ganda: kursi mungkin sudah keburu dipesan (mis. tab lain).
   const bookedNow = getBookedSeats(film.id, schedule.id);
   const conflict = state.seats.filter((s) => bookedNow.includes(s));
   if (conflict.length > 0) {
     alert(
-      "Maaf, kursi berikut baru saja dipesan orang lain: " +
+      "Maaf, kursi berikut baru saja dipesan: " +
         conflict.join(", ") +
         ".\nSilakan pilih kursi lain."
     );
-    renderSeatMap(); // refresh denah, buang kursi yang bentrok
     state.seats = state.seats.filter((s) => !bookedNow.includes(s));
-    updateSeatSelectionUI();
+    renderSeatMap();
     showStep("seat");
     return;
   }
 
-  // Simpan booking.
   const booking = {
     id: generateBookingId(),
     nama: nama,
@@ -227,17 +258,19 @@ function handleBooking() {
   };
   saveBooking(booking);
 
-  renderSuccess(booking);
+  renderTicket(booking);
   renderBookings();
   showStep("success");
 }
 
-function renderSuccess(booking) {
-  els.successDetail.innerHTML = `
-    <dt>Nama</dt><dd>${escapeHtml(booking.nama)}</dd>
-    <dt>Film</dt><dd>${booking.filmJudul}</dd>
-    <dt>Jadwal</dt><dd>${booking.jam}</dd>
-    <dt>Kursi</dt><dd>${booking.seats.join(", ")}</dd>
+function renderTicket(booking) {
+  els.ticketCard.innerHTML = `
+    <dl>
+      <dt>Nama</dt><dd>${escapeHtml(booking.nama)}</dd>
+      <dt>Film</dt><dd>${escapeHtml(booking.filmJudul)}</dd>
+      <dt>Jadwal</dt><dd>${booking.jam}</dd>
+      <dt>Kursi</dt><dd>${booking.seats.join(", ")}</dd>
+    </dl>
   `;
 }
 
@@ -247,18 +280,19 @@ function renderBookings() {
   const bookings = getBookings();
   if (bookings.length === 0) {
     els.bookingsList.innerHTML =
-      '<p class="empty-text">Belum ada booking. Silakan lakukan booking pertama Anda.</p>';
+      '<p class="empty-text">Belum ada booking. Yuk pesan tiket pertamamu!</p>';
     return;
   }
-  // Tampilkan terbaru di atas.
   els.bookingsList.innerHTML = "";
   [...bookings].reverse().forEach((b) => {
     const item = document.createElement("div");
     item.className = "booking-item";
     item.innerHTML = `
-      <span class="b-name">${escapeHtml(b.nama)}</span>
-      <span class="b-film">${escapeHtml(b.filmJudul)}</span>
-      <span class="b-meta">Jadwal ${b.jam}</span>
+      <div class="bi-top">
+        <span class="b-name">${escapeHtml(b.nama)}</span>
+        <span class="b-jam">🕐 ${b.jam}</span>
+      </div>
+      <div class="b-film">${escapeHtml(b.filmJudul)}</div>
       <span class="b-seats">🎟 ${(b.seats || []).join(", ")}</span>
     `;
     els.bookingsList.appendChild(item);
@@ -282,25 +316,38 @@ function resetFlow() {
 
 // ---------- Event listener global ----------
 
-// Tombol "kembali" antar step.
 document.querySelectorAll(".btn-back").forEach((btn) => {
   btn.addEventListener("click", () => showStep(btn.dataset.back));
 });
 
-els.toConfirmBtn.addEventListener("click", () => {
-  renderSummary();
-  showStep("confirm");
-});
-
-els.bookBtn.addEventListener("click", handleBooking);
 els.bookAgainBtn.addEventListener("click", resetFlow);
 
-// Sembunyikan error saat user mulai mengetik.
 els.nameInput.addEventListener("input", () => {
   if (els.nameInput.value.trim()) els.nameError.classList.add("hidden");
 });
 
-// ---------- Inisialisasi (muat data dari Local Storage) ----------
+// Bottom navigation.
+document.querySelectorAll(".nav-item").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".nav-item").forEach((n) => n.classList.remove("active"));
+    btn.classList.add("active");
+    const nav = btn.dataset.nav;
+    if (nav === "home") {
+      resetFlow();
+    } else if (nav === "bookings") {
+      resetFlow();
+      els.bookingsPanel.scrollIntoView({ behavior: "smooth" });
+    } else if (nav === "info") {
+      alert(
+        "CinemaGo — aplikasi simulasi booking kursi bioskop.\n\n" +
+          "Data booking disimpan di Local Storage browser. " +
+          "Tanpa login, tanpa server. Menghapus data browser akan menghapus semua booking."
+      );
+    }
+  });
+});
+
+// ---------- Inisialisasi ----------
 
 renderFilms();
 renderBookings();

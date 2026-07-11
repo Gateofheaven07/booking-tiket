@@ -2,99 +2,132 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Booking Kursi Bioskop</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>CinemaGo — Booking Kursi Bioskop</title>
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-  <header class="app-header">
-    <h1>🎬 Booking Kursi Bioskop</h1>
-    <p class="subtitle">Simulasi pemesanan kursi — tanpa login, data tersimpan di browser</p>
-  </header>
-
-  <main class="container">
-    <!-- Indikator langkah -->
-    <ol class="steps-indicator" id="stepsIndicator">
-      <li data-step="1">Film</li>
-      <li data-step="2">Jadwal</li>
-      <li data-step="3">Kursi</li>
-      <li data-step="4">Konfirmasi</li>
-    </ol>
-
-    <!-- STEP 1: Pilih Film -->
-    <section class="step" id="step-film">
-      <h2>1. Pilih Film</h2>
-      <div class="film-grid" id="filmGrid"></div>
-    </section>
-
-    <!-- STEP 2: Pilih Jadwal -->
-    <section class="step hidden" id="step-schedule">
-      <button class="btn-back" data-back="film">← Kembali ke daftar film</button>
-      <h2>2. Pilih Jadwal Tayang</h2>
-      <div class="selected-film-info" id="selectedFilmInfo"></div>
-      <div class="schedule-list" id="scheduleList"></div>
-    </section>
-
-    <!-- STEP 3: Pilih Kursi -->
-    <section class="step hidden" id="step-seat">
-      <button class="btn-back" data-back="schedule">← Kembali ke jadwal</button>
-      <h2>3. Pilih Kursi</h2>
-      <div class="selected-context" id="seatContext"></div>
-
-      <div class="screen">LAYAR</div>
-      <div class="seat-map" id="seatMap"></div>
-
-      <div class="seat-legend">
-        <span><i class="legend-box available"></i> Tersedia</span>
-        <span><i class="legend-box selected"></i> Dipilih</span>
-        <span><i class="legend-box booked"></i> Sudah Dipesan</span>
+  <div class="app-shell">
+    <!-- Top bar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <span class="logo-dot"></span>
+        <span class="logo-text">Cinema<strong>Go</strong></span>
       </div>
+      <div class="topbar-right" id="topbarStep"></div>
+    </header>
 
-      <div class="seat-actions">
-        <p class="selected-seats-text" id="selectedSeatsText">Belum ada kursi dipilih.</p>
-        <button class="btn-primary" id="toConfirmBtn" disabled>Lanjut ke Konfirmasi →</button>
+    <main class="container">
+      <!-- Indikator langkah -->
+      <ol class="steps-indicator" id="stepsIndicator">
+        <li data-step="1"><span>1</span>Film</li>
+        <li data-step="2"><span>2</span>Jadwal</li>
+        <li data-step="3"><span>3</span>Kursi</li>
+        <li data-step="4"><span>4</span>Bayar</li>
+      </ol>
+
+      <!-- STEP 1: Pilih Film -->
+      <section class="step" id="step-film">
+        <div class="section-head">
+          <h2>Now Playing</h2>
+          <p class="section-sub">Pilih film yang ingin kamu tonton</p>
+        </div>
+        <div class="film-grid" id="filmGrid"></div>
+      </section>
+
+      <!-- STEP 2: Pilih Jadwal -->
+      <section class="step hidden" id="step-schedule">
+        <button class="btn-back" data-back="film">‹ Kembali</button>
+        <div class="film-hero" id="filmHero"></div>
+        <div class="section-head">
+          <h2>Pilih Jadwal Tayang</h2>
+        </div>
+        <div class="schedule-list" id="scheduleList"></div>
+      </section>
+
+      <!-- STEP 3: Pilih Kursi -->
+      <section class="step hidden" id="step-seat">
+        <button class="btn-back" data-back="schedule">‹ Kembali</button>
+        <div class="section-head">
+          <h2>Pilih Kursi</h2>
+          <p class="section-sub" id="seatContext"></p>
+        </div>
+
+        <div class="screen-wrap">
+          <div class="screen-arc"></div>
+          <span class="screen-label">LAYAR</span>
+        </div>
+
+        <div class="seat-map" id="seatMap"></div>
+
+        <div class="seat-legend">
+          <span><i class="legend-box available"></i> Tersedia</span>
+          <span><i class="legend-box selected"></i> Dipilih</span>
+          <span><i class="legend-box booked"></i> Sudah Dipesan</span>
+        </div>
+      </section>
+
+      <!-- STEP 4: Nama & Konfirmasi -->
+      <section class="step hidden" id="step-confirm">
+        <button class="btn-back" data-back="seat">‹ Kembali</button>
+        <div class="section-head">
+          <h2>Konfirmasi &amp; Pemesan</h2>
+        </div>
+
+        <div class="form-group">
+          <label for="nameInput">Nama Pemesan <span class="required">*</span></label>
+          <input type="text" id="nameInput" placeholder="Masukkan nama kamu" autocomplete="off" />
+          <p class="error-text hidden" id="nameError">Nama pemesan wajib diisi.</p>
+        </div>
+
+        <div class="summary-card">
+          <h3>Ringkasan Pesanan</h3>
+          <dl id="summaryContent"></dl>
+        </div>
+      </section>
+
+      <!-- Sukses -->
+      <section class="step hidden" id="step-success">
+        <div class="success-box">
+          <div class="success-icon">🎉</div>
+          <h2>Booking Berhasil!</h2>
+          <p class="section-sub">Terima kasih, selamat menonton!</p>
+          <div class="ticket" id="ticketCard"></div>
+          <button class="btn-primary" id="bookAgainBtn">Booking Lagi</button>
+        </div>
+      </section>
+
+      <!-- Daftar Booking -->
+      <section class="bookings-panel" id="bookingsPanel">
+        <div class="section-head">
+          <h2>Daftar Booking</h2>
+        </div>
+        <div id="bookingsList"></div>
+      </section>
+    </main>
+
+    <!-- Action bar melekat di bawah (muncul di step kursi & konfirmasi) -->
+    <div class="action-bar hidden" id="actionBar">
+      <div class="action-info">
+        <span class="action-label" id="actionLabel">Total Kursi</span>
+        <span class="action-value" id="actionValue">-</span>
       </div>
-    </section>
+      <button class="btn-primary" id="actionBtn" disabled>Lanjut</button>
+    </div>
 
-    <!-- STEP 4: Isi Nama & Konfirmasi -->
-    <section class="step hidden" id="step-confirm">
-      <button class="btn-back" data-back="seat">← Kembali ke pilih kursi</button>
-      <h2>4. Isi Nama &amp; Konfirmasi</h2>
-
-      <div class="form-group">
-        <label for="nameInput">Nama Pemesan <span class="required">*</span></label>
-        <input type="text" id="nameInput" placeholder="Masukkan nama Anda" autocomplete="off" />
-        <p class="error-text hidden" id="nameError">Nama pemesan wajib diisi.</p>
-      </div>
-
-      <div class="summary-card">
-        <h3>Ringkasan Booking</h3>
-        <dl id="summaryContent"></dl>
-      </div>
-
-      <button class="btn-primary btn-book" id="bookBtn">Booking</button>
-    </section>
-
-    <!-- Pesan sukses -->
-    <section class="step hidden" id="step-success">
-      <div class="success-box">
-        <div class="success-icon">✅</div>
-        <h2>Booking Berhasil!</h2>
-        <dl id="successDetail"></dl>
-        <button class="btn-primary" id="bookAgainBtn">Booking Lagi</button>
-      </div>
-    </section>
-
-    <!-- Daftar Booking -->
-    <section class="bookings-panel">
-      <h2>📋 Daftar Booking</h2>
-      <div id="bookingsList"></div>
-    </section>
-  </main>
-
-  <footer class="app-footer">
-    <p>Data booking disimpan di Local Storage browser. Menghapus data browser akan menghapus semua booking.</p>
-  </footer>
+    <!-- Bottom navigation -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" data-nav="home">
+        <span class="nav-ico">🏠</span><span>Home</span>
+      </button>
+      <button class="nav-item" data-nav="bookings">
+        <span class="nav-ico">🎟️</span><span>Booking</span>
+      </button>
+      <button class="nav-item" data-nav="info">
+        <span class="nav-ico">ℹ️</span><span>Info</span>
+      </button>
+    </nav>
+  </div>
 
   <script src="js/data.js"></script>
   <script src="js/storage.js"></script>

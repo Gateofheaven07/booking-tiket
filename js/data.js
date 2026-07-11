@@ -13,6 +13,8 @@ const FILMS = [
     id: "f1",
     judul: "Petualangan Langit Biru",
     emoji: "🎈",
+    poster: "assets/petualangan-langit-biru.png",
+    rating: "8.4",
     genre: "Petualangan / Keluarga",
     durasi: "1j 45m",
     schedules: [
@@ -25,6 +27,8 @@ const FILMS = [
     id: "f2",
     judul: "Misteri Kota Tua",
     emoji: "🕵️",
+    poster: "assets/misteri-kota-tua.png",
+    rating: "8.1",
     genre: "Thriller / Misteri",
     durasi: "2j 05m",
     schedules: [
@@ -37,6 +41,8 @@ const FILMS = [
     id: "f3",
     judul: "Robot Penjaga Galaksi",
     emoji: "🤖",
+    poster: "assets/robot-penjaga-galaksi.png",
+    rating: "8.9",
     genre: "Sci-Fi / Aksi",
     durasi: "2j 20m",
     schedules: [
@@ -50,6 +56,8 @@ const FILMS = [
     id: "f4",
     judul: "Senyum di Ujung Musim",
     emoji: "🌸",
+    poster: "assets/senyum-di-ujung-musim.png",
+    rating: "7.9",
     genre: "Drama / Romansa",
     durasi: "1j 55m",
     schedules: [
