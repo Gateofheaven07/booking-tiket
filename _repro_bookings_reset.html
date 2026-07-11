@@ -1,12 +1,4 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CinemaGo — Booking Kursi Bioskop</title>
-  <link rel="stylesheet" href="css/style.css" />
-</head>
-<body>
+<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>repro</title><link rel="stylesheet" href="css/style.css"/></head><body>
   <div class="app-shell">
     <!-- Top bar -->
     <header class="topbar">
@@ -137,9 +129,4 @@
       </button>
     </nav>
   </div>
-
-  <script src="js/data.js"></script>
-  <script src="js/storage.js"></script>
-  <script src="js/app.js"></script>
-</body>
-</html>
+<script src="js/data.js"> document.getElementById('bookingsPanel').scrollIntoView();</script><script src="js/storage.js"></script><script src="js/app.js"></script><script>window.confirm = function(){ return true; };startBooking(FILMS[0]); selectSchedule(FILMS[0].schedules[0]); toggleSeat('B2', document.querySelector('[data-seat="B2"]')); goToConfirm(); document.getElementById('nameInput').value='Taufik'; handleBooking(); resetFlow(); document.getElementById('resetBookingsBtn').click();</script></body></html>

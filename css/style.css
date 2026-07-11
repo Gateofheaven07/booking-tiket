@@ -18,6 +18,9 @@
   --radius-sm: 12px;
   --shell: 720px;
   --nav-h: 66px;
+  --topbar-h: 60px;
+  --actionbar-h: 78px;
+  --shell-gap: 0px;
   --safe-b: env(safe-area-inset-bottom, 0px);
 }
 
@@ -43,22 +46,29 @@ body {
   margin: 0 auto;
   min-height: 100vh;
   position: relative;
-  padding-bottom: calc(var(--nav-h) + var(--safe-b) + 12px);
+  padding-bottom: calc(var(--nav-h) + var(--safe-b) + var(--shell-gap) + 12px);
 }
 
 .hidden { display: none !important; }
 
-/* Top bar */
+/* Top bar — fixed (bukan sticky) agar tidak rusak oleh overflow:hidden
+   pada .app-shell di breakpoint desktop; senada dengan action-bar & bottom-nav. */
 .topbar {
-  position: sticky;
-  top: 0;
+  position: fixed;
+  top: var(--shell-gap);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: var(--shell);
+  height: var(--topbar-h);
   z-index: 20;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 18px 12px;
+  padding: 0 18px;
   backdrop-filter: blur(14px);
-  background: linear-gradient(180deg, rgba(13, 5, 24, 0.85), rgba(13, 5, 24, 0.2));
+  background: linear-gradient(180deg, rgba(13, 5, 24, 0.92), rgba(13, 5, 24, 0.55));
+  border-bottom: 1px solid var(--border);
 }
 .topbar-left { display: flex; align-items: center; gap: 9px; }
 .logo-dot {
@@ -68,9 +78,12 @@ body {
 }
 .logo-text { font-size: 1.15rem; letter-spacing: 0.3px; }
 .logo-text strong { color: var(--magenta-2); }
-.topbar-right { font-size: 0.8rem; color: var(--text-dim); }
+.topbar-right {
+  font-size: 0.8rem; color: var(--text-dim);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 55%;
+}
 
-.container { padding: 8px 18px 20px; }
+.container { padding: calc(var(--topbar-h) + var(--shell-gap) + 14px) 18px 20px; }
 
 /* Indikator langkah */
 .steps-indicator {
@@ -315,6 +328,14 @@ body {
 }
 
 /* STEP 3: Denah kursi */
+.seat-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 14px 18px;
+  margin-bottom: 4px;
+  background-image: radial-gradient(ellipse 90% 60% at 50% 0%, rgba(139, 92, 246, 0.12), transparent 70%);
+}
 .screen-wrap { text-align: center; margin: 6px 0 26px; }
 .screen-arc {
   height: 42px;
@@ -340,7 +361,10 @@ body {
   margin-bottom: 22px;
 }
 .seat-row { display: flex; gap: 6px; align-items: center; }
-.row-label { width: 16px; text-align: center; color: var(--text-faint); font-size: 0.72rem; }
+.row-label {
+  width: 18px; text-align: center; color: var(--text-faint); font-size: 0.72rem; font-weight: 600;
+}
+.seat-aisle { width: 14px; flex-shrink: 0; }
 .seat {
   width: 30px; height: 30px;
   border-radius: 9px 9px 5px 5px;
@@ -348,10 +372,12 @@ body {
   background: rgba(255, 255, 255, 0.09);
   color: var(--text-dim);
   font-size: 0.62rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: transform 0.06s, background 0.15s, box-shadow 0.15s;
+  flex-shrink: 0;
+  transition: transform 0.06s, background 0.15s, box-shadow 0.15s, border-color 0.15s;
 }
-.seat:hover:not(.booked) { transform: translateY(-2px); border-color: var(--cyan); }
+.seat:hover:not(.booked):not(.selected) { transform: translateY(-2px); border-color: var(--cyan); background: rgba(34, 211, 238, 0.12); }
 .seat.selected {
   background: var(--cyan); color: #05323a; font-weight: 700;
   border-color: var(--cyan);
@@ -366,6 +392,10 @@ body {
   display: flex; justify-content: center; flex-wrap: wrap; gap: 18px;
   font-size: 0.8rem; color: var(--text-dim); margin-bottom: 8px;
 }
+
+/* Step kursi & konfirmasi menampilkan action-bar fixed di bawah —
+   beri jarak ekstra agar konten terakhir tidak tertutup. */
+#step-seat, #step-confirm { padding-bottom: var(--actionbar-h); }
 .seat-legend span { display: flex; align-items: center; gap: 7px; }
 .legend-box { width: 15px; height: 15px; border-radius: 5px; display: inline-block; }
 .legend-box.available { background: rgba(255, 255, 255, 0.14); border: 1px solid rgba(255,255,255,0.25); }
@@ -423,6 +453,27 @@ dl dd { text-align: right; font-weight: 600; word-break: break-word; font-size: 
 
 /* Daftar booking */
 .bookings-panel { padding: 6px 18px 10px; margin-top: 6px; }
+.bookings-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.bookings-head h2 { margin-bottom: 0; }
+.btn-reset {
+  background: rgba(255, 45, 149, 0.1);
+  color: var(--magenta-2);
+  border: 1px solid rgba(255, 45, 149, 0.35);
+  border-radius: 20px;
+  padding: 7px 14px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+.btn-reset:hover { background: rgba(255, 45, 149, 0.2); border-color: var(--magenta-2); }
 .booking-item {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -450,7 +501,7 @@ dl dd { text-align: right; font-weight: 600; word-break: break-word; font-size: 
 /* Action bar (sticky, di dalam shell) */
 .action-bar {
   position: fixed;
-  bottom: calc(var(--nav-h) + var(--safe-b));
+  bottom: calc(var(--nav-h) + var(--safe-b) + var(--shell-gap));
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
@@ -473,7 +524,7 @@ dl dd { text-align: right; font-weight: 600; word-break: break-word; font-size: 
 /* Bottom nav */
 .bottom-nav {
   position: fixed;
-  bottom: 0;
+  bottom: var(--shell-gap);
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
@@ -502,7 +553,9 @@ dl dd { text-align: right; font-weight: 600; word-break: break-word; font-size: 
 
 /* Ponsel kecil */
 @media (max-width: 360px) {
-  .seat { width: 26px; height: 26px; }
+  .seat { width: 25px; height: 25px; }
+  .seat-row { gap: 4px; }
+  .seat-aisle { width: 10px; }
   .schedule-list { grid-template-columns: repeat(2, 1fr); }
 }
 
@@ -510,11 +563,14 @@ dl dd { text-align: right; font-weight: 600; word-break: break-word; font-size: 
 @media (min-width: 600px) {
   :root { --shell: 860px; }
   .film-grid { grid-template-columns: repeat(3, 1fr); }
-  .seat { width: 34px; height: 34px; font-size: 0.7rem; }
+  .seat { width: 36px; height: 36px; font-size: 0.74rem; }
+  .seat-row { gap: 8px; }
+  .seat-aisle { width: 22px; }
   .schedule-list { grid-template-columns: repeat(4, 1fr); }
 }
 
 @media (min-width: 900px) {
+  :root { --shell-gap: 20px; }
   .film-grid { grid-template-columns: repeat(4, 1fr); }
   .app-shell {
     margin: 20px auto;
@@ -525,5 +581,6 @@ dl dd { text-align: right; font-weight: 600; word-break: break-word; font-size: 
     box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
   }
   .topbar { border-radius: 26px 26px 0 0; }
-  .bottom-nav, .action-bar { border-radius: 0; }
+  .bottom-nav { border-radius: 0 0 26px 26px; }
+  .action-bar { border-radius: 0; }
 }

@@ -29,6 +29,7 @@ const els = {
   bookAgainBtn: document.getElementById("bookAgainBtn"),
   bookingsList: document.getElementById("bookingsList"),
   bookingsPanel: document.getElementById("bookingsPanel"),
+  resetBookingsBtn: document.getElementById("resetBookingsBtn"),
   stepsIndicator: document.getElementById("stepsIndicator"),
   topbarStep: document.getElementById("topbarStep"),
   actionBar: document.getElementById("actionBar"),
@@ -248,6 +249,13 @@ function renderSeatMap() {
         seatBtn.addEventListener("click", () => toggleSeat(seatId, seatBtn));
       }
       rowEl.appendChild(seatBtn);
+
+      // Gang tengah antara kursi ke-4 dan ke-5 (efek seperti bioskop asli).
+      if (i === SEAT_CONFIG.seatsPerRow / 2) {
+        const aisle = document.createElement("span");
+        aisle.className = "seat-aisle";
+        rowEl.appendChild(aisle);
+      }
     }
     els.seatMap.appendChild(rowEl);
   });
@@ -347,6 +355,8 @@ function renderTicket(booking) {
 
 function renderBookings() {
   const bookings = getBookings();
+  els.resetBookingsBtn.classList.toggle("hidden", bookings.length === 0);
+
   if (bookings.length === 0) {
     els.bookingsList.innerHTML =
       '<p class="empty-text">Belum ada booking. Yuk pesan tiket pertamamu!</p>';
@@ -366,6 +376,16 @@ function renderBookings() {
     `;
     els.bookingsList.appendChild(item);
   });
+}
+
+// Hapus seluruh riwayat booking (setelah konfirmasi pengguna).
+function handleResetBookings() {
+  const confirmed = confirm(
+    "Hapus semua data booking?\nSemua kursi yang sudah dipesan akan kembali tersedia. Tindakan ini tidak dapat dibatalkan."
+  );
+  if (!confirmed) return;
+  clearBookings();
+  renderBookings();
 }
 
 // ---------- Util ----------
@@ -396,6 +416,7 @@ document.querySelectorAll(".btn-back").forEach((btn) => {
 });
 
 els.bookAgainBtn.addEventListener("click", resetFlow);
+els.resetBookingsBtn.addEventListener("click", handleResetBookings);
 
 els.nameInput.addEventListener("input", () => {
   if (els.nameInput.value.trim()) els.nameError.classList.add("hidden");

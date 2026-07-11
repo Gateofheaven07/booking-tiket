@@ -42,3 +42,8 @@ function getBookedSeats(filmId, scheduleId) {
 function generateBookingId() {
   return "bk-" + Math.random().toString(36).slice(2, 10);
 }
+
+// Hapus seluruh data booking dari Local Storage (reset penuh).
+function clearBookings() {
+  localStorage.removeItem(STORAGE_KEY);
+}
