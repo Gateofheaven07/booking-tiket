@@ -13,9 +13,11 @@ const els = {
     schedule: document.getElementById("step-schedule"),
     seat: document.getElementById("step-seat"),
     confirm: document.getElementById("step-confirm"),
+    info: document.getElementById("step-info"),
     success: document.getElementById("step-success"),
   },
   filmGrid: document.getElementById("filmGrid"),
+  filmDetail: document.getElementById("filmDetail"),
   filmHero: document.getElementById("filmHero"),
   scheduleList: document.getElementById("scheduleList"),
   seatContext: document.getElementById("seatContext"),
@@ -52,6 +54,13 @@ function showStep(stepName) {
 }
 
 function updateIndicator(stepName) {
+  // Step di luar alur nomor (info) menyembunyikan indikator langkah.
+  const isFlow = stepName !== "info";
+  els.stepsIndicator.classList.toggle("hidden", !isFlow);
+  if (stepName === "info") {
+    els.topbarStep.textContent = "Detail Film";
+    return;
+  }
   const order = { film: 1, schedule: 2, seat: 3, confirm: 4, success: 4 };
   const current = order[stepName] || 1;
   const labels = { 1: "Pilih Film", 2: "Pilih Jadwal", 3: "Pilih Kursi", 4: "Konfirmasi" };
@@ -60,6 +69,13 @@ function updateIndicator(stepName) {
     const n = Number(li.dataset.step);
     li.classList.toggle("active", n === current);
     li.classList.toggle("done", n < current);
+  });
+}
+
+// Set item bottom-nav yang aktif.
+function setNav(name) {
+  document.querySelectorAll(".nav-item").forEach((n) => {
+    n.classList.toggle("active", n.dataset.nav === name);
   });
 }
 
@@ -96,6 +112,11 @@ function renderFilms() {
       <div class="poster-wrap">
         <img src="${film.poster}" alt="Poster ${escapeHtml(film.judul)}" loading="lazy" />
         <span class="poster-rating">★ ${film.rating}</span>
+        <div class="poster-overlay">
+          <p class="ov-genre">${escapeHtml(film.genre)} · ${film.durasi}</p>
+          <p class="ov-sinopsis">${escapeHtml(film.sinopsis)}</p>
+          <span class="ov-cta">Lihat Detail ›</span>
+        </div>
       </div>
       <div class="film-body">
         <h3>${escapeHtml(film.judul)}</h3>
@@ -103,16 +124,64 @@ function renderFilms() {
         <p class="film-meta">⏱ ${film.durasi}</p>
       </div>
     `;
-    card.addEventListener("click", () => selectFilm(film));
+    card.addEventListener("click", () => openFilmDetail(film));
     els.filmGrid.appendChild(card);
   });
 }
 
-function selectFilm(film) {
+// Klik kartu → tab Info menampilkan detail film.
+function openFilmDetail(film) {
+  state.film = film;
+  renderFilmDetail(film);
+  setNav("info");
+  showStep("info");
+}
+
+function renderFilmDetail(film) {
+  if (!film) {
+    // Info dibuka tanpa memilih film.
+    els.filmDetail.innerHTML = `
+      <div class="detail-empty">
+        <div class="detail-empty-ico">🎬</div>
+        <h2>Detail Film</h2>
+        <p class="section-sub">Pilih salah satu film di halaman Home untuk melihat detail lengkapnya di sini.</p>
+        <button class="btn-primary" onclick="goHome()">Jelajahi Film</button>
+      </div>
+    `;
+    return;
+  }
+  els.filmDetail.innerHTML = `
+    <div class="detail-hero">
+      <div class="detail-backdrop" style="background-image:url('${film.poster}')"></div>
+      <img class="detail-poster" src="${film.poster}" alt="Poster ${escapeHtml(film.judul)}" />
+    </div>
+    <div class="detail-body">
+      <h2 class="detail-title">${escapeHtml(film.judul)}</h2>
+      <div class="detail-tags">
+        <span class="tag star">★ ${film.rating}</span>
+        <span class="tag">${escapeHtml(film.genre)}</span>
+        <span class="tag">⏱ ${film.durasi}</span>
+        <span class="tag">${film.tahun}</span>
+      </div>
+      <h3 class="detail-h">Sinopsis</h3>
+      <p class="detail-sinopsis">${escapeHtml(film.sinopsis)}</p>
+      <div class="detail-credits">
+        <div><span class="ck">Sutradara</span><span class="cv">${escapeHtml(film.sutradara)}</span></div>
+        <div><span class="ck">Pemeran</span><span class="cv">${escapeHtml(film.pemain.join(", "))}</span></div>
+      </div>
+      <button class="btn-primary btn-detail-book" id="detailBookBtn">🎟 Pesan Tiket</button>
+    </div>
+  `;
+  document.getElementById("detailBookBtn").addEventListener("click", () => startBooking(film));
+}
+
+// Mulai alur booking dari detail film.
+function startBooking(film) {
   state.film = film;
   state.schedule = null;
   state.seats = [];
   renderSchedules();
+  setNav("home");
   showStep("schedule");
 }
 
@@ -311,7 +380,13 @@ function resetFlow() {
   state.film = null;
   state.schedule = null;
   state.seats = [];
+  setNav("home");
   showStep("film");
+}
+
+// Dipakai tombol pada halaman detail kosong.
+function goHome() {
+  resetFlow();
 }
 
 // ---------- Event listener global ----------
@@ -335,14 +410,15 @@ document.querySelectorAll(".nav-item").forEach((btn) => {
     if (nav === "home") {
       resetFlow();
     } else if (nav === "bookings") {
-      resetFlow();
+      state.film = null;
+      state.schedule = null;
+      state.seats = [];
+      showStep("film");
       els.bookingsPanel.scrollIntoView({ behavior: "smooth" });
     } else if (nav === "info") {
-      alert(
-        "CinemaGo — aplikasi simulasi booking kursi bioskop.\n\n" +
-          "Data booking disimpan di Local Storage browser. " +
-          "Tanpa login, tanpa server. Menghapus data browser akan menghapus semua booking."
-      );
+      // Tampilkan detail film terpilih; jika belum ada, tampilkan placeholder.
+      renderFilmDetail(state.film);
+      showStep("info");
     }
   });
 });
